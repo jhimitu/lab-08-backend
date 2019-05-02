@@ -52,16 +52,16 @@ Estimate of time needed to complete: 30 min
 
 Start time: 10:30
 
-Finish time:
+Finish time: 14:00
 
-Actual time needed to complete: 30 min
+Actual time needed to complete: 4 Hours 30 min
 
 Number and name of feature: Feature #3 Deploy
 
-Estimate of time needed to complete: 45 min
+Estimate of time needed to complete: 15 min
 
 Start time: 11:00
 
-Finish time: 11:30
+Finish time: 11:15
 
-Actual time needed to complete: 30 min
+Actual time needed to complete: 15 min
