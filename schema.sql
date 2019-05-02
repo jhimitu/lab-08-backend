@@ -11,13 +11,14 @@ CREATE TABLE location (
 
 CREATE TABLE weather (
   formatted_query VARCHAR(255),
-  summary VARCHAR(512),
+  forecast VARCHAR(512),
   time VARCHAR(255)
 );
 
 CREATE TABLE events (
+  formatted_query VARCHAR(255),
   link VARCHAR(255),
   name VARCHAR(255),
   event_date VARCHAR(255),
-  summary VARCHAR(512)
+  summary TEXT
 )
