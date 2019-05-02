@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS location;
 CREATE TABLE location (
   latitude DECIMAL,
   longitude DECIMAL,
