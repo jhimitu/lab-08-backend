@@ -5,29 +5,67 @@ const superagent = require('superagent');
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const pg = require('pg');
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
+
+const client = new pg.Client(process.env.DATABASE_URL);
+client.connect();
 
 app.get('/hello', (request, response) => {
   response.status(200).send('Hello');
 });
 
 app.get('/location', (request, response) => {
-  const queryData = request.query.data;
-  let geocodeURL = `https://maps.googleapis.com/maps/api/geocode/json?address=${queryData}&key=${process.env.GEOCODE_API_KEY}`;
-  superagent.get(geocodeURL)
-    .end((err, res) => {
-      if (err && err.status !== 200) {
-        const errorResponse500 = {'status': 500, 'responseText': 'Sorry, something went wrong' };
+  getLocation(request.query.data)
+    .then(location => response.send(location))
+    .catch(error => handleError(error, response));
 
-        response.status(500).send(errorResponse500);
+
+  // const queryData = request.query.data;
+  // let geocodeURL = `https://maps.googleapis.com/maps/api/geocode/json?address=${queryData}&key=${process.env.GEOCODE_API_KEY}`;
+  // superagent.get(geocodeURL)
+  //   .end((err, res) => {
+  //     if (err && err.status !== 200) {
+  //       const errorResponse500 = {'status': 500, 'responseText': 'Sorry, something went wrong' };
+
+  //       response.status(500).send(errorResponse500);
+  //     } else {
+  //       const location = new Location(queryData, res);
+  //       response.status(200).send(location);
+  //     }
+  //   });
+});
+
+function handleError(error, response) {
+  console.log(error);
+  if (response) response.status(500).send('Sorry, something went wrong');
+}
+
+function getLocation(query) {
+  let sqlStatement = 'SELECT * FROM location WHERE search_query = $1;';
+  let values = [ query ];
+  return client.query(sqlStatement, values)
+    .then((data) => {
+      if (data.rowCount > 0) {
+        console.log('DB DATA: ', data.rows[0]);
+        return data.rows[0];
       } else {
-        const location = new Location(queryData, res);
-        response.status(200).send(location);
+        let geocodeURL = `https://maps.googleapis.com/maps/api/geocode/json?address=${query}&key=${process.env.GEOCODE_API_KEY}`;
+        return superagent.get(geocodeURL)
+          .then(res => {
+            console.log('API DATA', res);
+            let tempLocation = new Location(query, res);
+            let sqlInsertStatement = 'INSERT INTO location (search_query, formatted_query, latitude, longitude) VALUES ( $1, $2, $3, $4);';
+            let insertValues = [ tempLocation.search_query, tempLocation.formatted_query, tempLocation.latitude, tempLocation.longitude ];
+            client.query(sqlInsertStatement, insertValues);
+            return tempLocation;
+          })
+          .catch(err => handleError(err));
       }
     });
-});
+}
 
 app.get('/weather', (request, response) => {
   const lat = request.query.data.latitude;
